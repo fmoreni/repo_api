@@ -6,13 +6,11 @@ on:
       - develop
     paths:
       - 'configs/gw-interno/**'
-    types: [opened, labeled]  # Aciona o workflow quando o PR é criado ou recebe uma label
+    types: [opened, labeled]  # Aciona o workflow ao abrir o PR e ao aplicar a label
 
 jobs:
   deploy:
-    if: |
-      contains(github.event.pull_request.labels.*.name, 'deploy-gw-interno') &&
-      github.event.pull_request.head.repo.full_name == github.repository
+    if: contains(github.event.pull_request.labels.*.name, 'deploy-gw-interno')
     runs-on: ubuntu-latest
 
     steps:
