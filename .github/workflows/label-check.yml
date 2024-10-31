@@ -9,6 +9,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Faz o clone completo do repositório
+
       - name: Autenticar com o GitHub CLI
         run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
@@ -38,4 +43,3 @@ jobs:
           else
             echo "Label obrigatória encontrada. PR pronto para revisão."
           fi
-
