@@ -5,7 +5,8 @@ on:
     branches:
       - develop
     paths:
-      - 'configs/gw-interno/**'   # Monitora apenas alterações na pasta gw-interno
+      - 'configs/gw-interno/**'
+    types: [opened, labeled]  # Aciona o workflow quando o PR é criado ou recebe uma label
 
 jobs:
   deploy:
