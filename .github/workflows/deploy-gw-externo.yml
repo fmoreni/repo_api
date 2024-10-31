@@ -1,0 +1,24 @@
+name: Deploy to Development for GW Externo
+
+on:
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - 'configs/gw-externo/**'     # Monitora apenas alterações na pasta gw-externo
+
+jobs:
+  deploy:
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'deploy-gw-externo')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Environment
+        run: echo "Setting up environment for GW Externo Development deploy"
+
+      - name: Deploy to Development for GW Externo
+        run: ./scripts/deploy-gw-externo.sh

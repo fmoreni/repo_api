@@ -1,0 +1,24 @@
+name: Deploy to Development for Sandbox
+
+on:
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - 'configs/sandbox/**'        # Monitora apenas alterações na pasta sandbox
+
+jobs:
+  deploy:
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'deploy-sandbox')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Environment
+        run: echo "Setting up environment for Sandbox Development deploy"
+
+      - name: Deploy to Development for Sandbox
+        run: ./scripts/deploy-sandbox.sh

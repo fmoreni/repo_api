@@ -1,0 +1,24 @@
+name: Deploy to Development for GW Interno
+
+on:
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - 'configs/gw-interno/**'     # Monitora apenas alterações na pasta gw-interno
+
+jobs:
+  deploy:
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'deploy-gw-interno')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Environment
+        run: echo "Setting up environment for GW Interno Development deploy"
+
+      - name: Deploy to Development for GW Interno
+        run: ./scripts/deploy-gw-interno.sh
