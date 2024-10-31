@@ -2,7 +2,7 @@ name: Label Check
 
 on:
   pull_request:
-    types: [opened, edited, labeled]  # Aciona o workflow quando o PR é criado ou atualizado
+    types: [opened, synchronize]  # Aciona o workflow quando o PR é criado ou atualizado
 
 jobs:
   check_label:
