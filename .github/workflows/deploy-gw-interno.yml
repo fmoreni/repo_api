@@ -3,9 +3,9 @@ name: Deploy to Development for GW Interno
 on:
   push:
     branches:
-      - develop   # Aciona o workflow apenas quando há um push na branch 'develop'
+      - develop
     paths:
-      - 'configs/gw-interno/**'  # Monitora apenas alterações na pasta do GW Interno
+      - 'configs/gw-interno/**'
 
 jobs:
   deploy:
@@ -17,6 +17,9 @@ jobs:
 
       - name: Set up Environment
         run: echo "Setting up environment for GW Interno Development deploy"
+
+      - name: Grant execute permission for the deploy script
+        run: chmod +x ./scripts/deploy-gw-interno.sh
 
       - name: Deploy to Development for GW Interno
         run: ./scripts/deploy-gw-interno.sh
