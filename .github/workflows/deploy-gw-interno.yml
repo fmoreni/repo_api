@@ -5,12 +5,13 @@ on:
     branches:
       - develop
     paths:
-      - 'configs/gw-interno/**'     # Monitora apenas alterações na pasta gw-interno
+      - 'configs/gw-interno/**'   # Monitora apenas alterações na pasta gw-interno
 
 jobs:
   deploy:
     if: |
-      contains(github.event.pull_request.labels.*.name, 'deploy-gw-interno')
+      contains(github.event.pull_request.labels.*.name, 'deploy-gw-interno') &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
 
     steps:
