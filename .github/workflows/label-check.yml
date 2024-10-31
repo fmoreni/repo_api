@@ -2,7 +2,7 @@ name: Label Check
 
 on:
   pull_request:
-    types: [opened, synchronize]  # Aciona o workflow quando o PR é criado ou atualizado
+    types: [opened, synchronize]  # Aciona o workflow quando o PR é criado ou atualizado com novos commits
 
 jobs:
   check_label:
@@ -17,30 +17,36 @@ jobs:
       - name: Autenticar com o GitHub CLI
         run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
-      - name: Verificar se há uma palavra-chave obrigatória no corpo do PR
+      - name: Verificar palavra-chave e diretório modificado
         env:
           PR_NUMBER: ${{ github.event.number }}
         run: |
-          # Obtém o corpo do PR usando o GitHub CLI
+          # Obtém o corpo do PR
           PR_BODY=$(gh pr view $PR_NUMBER --json body --jq '.body')
+          # Obtém os arquivos modificados no PR
+          CHANGED_FILES=$(gh pr view $PR_NUMBER --json files --jq '.files[].path')
 
-          # Define as palavras-chave obrigatórias
-          REQUIRED_KEYWORDS=("deploy-gw-interno" "deploy-gw-externo" "deploy-domain" "deploy-sandbox")
-          
-          # Verifica se uma das palavras-chave obrigatórias está presente no corpo do PR
-          KEYWORD_PRESENT=false
-          for REQUIRED_KEYWORD in "${REQUIRED_KEYWORDS[@]}"; do
-            if echo "$PR_BODY" | grep -iq "$REQUIRED_KEYWORD"; then
-              KEYWORD_PRESENT=true
-              echo "Palavra-chave '$REQUIRED_KEYWORD' encontrada no corpo do PR."
+          # Define as relações entre palavras-chave e diretórios
+          declare -A KEYWORD_PATHS
+          KEYWORD_PATHS[deploy-gw-interno]="configs/gw-interno/"
+          KEYWORD_PATHS[deploy-gw-externo]="configs/gw-externo/"
+          KEYWORD_PATHS[deploy-domain]="configs/gw-domain/"
+          KEYWORD_PATHS[deploy-sandbox]="configs/gw-sandbox/"
+
+          # Verifica se há uma palavra-chave no corpo do PR que corresponde ao diretório alterado
+          MATCH_FOUND=false
+          for KEYWORD in "${!KEYWORD_PATHS[@]}"; do
+            if echo "$PR_BODY" | grep -iq "$KEYWORD" && echo "$CHANGED_FILES" | grep -q "${KEYWORD_PATHS[$KEYWORD]}"; then
+              MATCH_FOUND=true
+              echo "Correspondência encontrada: palavra-chave '$KEYWORD' e diretório '${KEYWORD_PATHS[$KEYWORD]}'"
               break
             fi
           done
 
-          # Falha se nenhuma palavra-chave obrigatória estiver presente
-          if [ "$KEYWORD_PRESENT" = false ]; then
-            echo "Erro: O corpo do PR requer uma das seguintes palavras-chave: ${REQUIRED_KEYWORDS[*]}"
+          # Falha se nenhuma correspondência válida foi encontrada
+          if [ "$MATCH_FOUND" = false ]; then
+            echo "Erro: A palavra-chave no corpo do PR deve corresponder ao diretório alterado. Verifique a palavra-chave e o diretório modificado."
             exit 1
           else
-            echo "Palavra-chave obrigatória encontrada. PR pronto para revisão."
+            echo "Verificação bem-sucedida: palavra-chave e diretório correspondem. PR pronto para revisão."
           fi
