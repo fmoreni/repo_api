@@ -2,7 +2,7 @@ name: Label Check
 
 on:
   pull_request:
-    types: [opened, edited, labeled, unlabeled]  # Aciona o workflow quando o PR é criado ou atualizado
+    types: [opened, edited, labeled, unlabeled]
 
 jobs:
   check_label:
@@ -17,29 +17,37 @@ jobs:
       - name: Autenticar com o GitHub CLI
         run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
-      - name: Verificar se há uma label obrigatória no PR
+      - name: Verificar se há uma label obrigatória e correspondente ao diretório modificado
         env:
           PR_NUMBER: ${{ github.event.number }}
         run: |
-          # Obtém as labels do PR usando o GitHub CLI
+          # Obtém as labels do PR
           LABELS=$(gh pr view $PR_NUMBER --json labels --jq '.labels[].name')
 
-          # Define as labels obrigatórias
-          REQUIRED_LABELS=("deploy-gw-interno" "deploy-gw-externo" "deploy-domain" "deploy-sandbox")
-          
-          # Verifica se uma das labels obrigatórias está presente
+          # Obtém os arquivos modificados no PR
+          CHANGED_FILES=$(gh pr view $PR_NUMBER --json files --jq '.files[].path')
+
+          # Define a relação entre labels e paths
+          declare -A LABEL_PATHS
+          LABEL_PATHS[deploy-gw-interno]="configs/gw-interno/"
+          LABEL_PATHS[deploy-gw-externo]="configs/gw-externo/"
+          LABEL_PATHS[deploy-domain]="configs/gw-domain/"
+          LABEL_PATHS[deploy-sandbox]="configs/gw-sandbox/"
+
+          # Verifica a coerência entre o label e o path modificado
           LABEL_PRESENT=false
-          for REQUIRED_LABEL in "${REQUIRED_LABELS[@]}"; do
-            if echo "$LABELS" | grep -q "$REQUIRED_LABEL"; then
+          for LABEL in "${!LABEL_PATHS[@]}"; do
+            if echo "$LABELS" | grep -q "$LABEL" && echo "$CHANGED_FILES" | grep -q "${LABEL_PATHS[$LABEL]}"; then
               LABEL_PRESENT=true
+              echo "Label '$LABEL' corresponde ao diretório modificado '${LABEL_PATHS[$LABEL]}'"
               break
             fi
           done
 
-          # Falha se nenhuma label obrigatória estiver presente
+          # Falha se nenhuma label obrigatória e correspondente estiver presente
           if [ "$LABEL_PRESENT" = false ]; then
-            echo "Erro: Este PR requer uma das seguintes labels: ${REQUIRED_LABELS[*]}"
+            echo "Erro: Este PR requer um label específico que corresponda ao diretório modificado. Verifique as labels e os arquivos modificados."
             exit 1
           else
-            echo "Label obrigatória encontrada. PR pronto para revisão."
+            echo "Label e diretório correspondentes encontrados. PR pronto para revisão."
           fi
