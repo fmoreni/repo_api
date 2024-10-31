@@ -9,14 +9,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Autenticar com o GitHub CLI
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
       - name: Verificar se há uma label obrigatória no PR
-        uses: actions-ecosystem/action-required-labels@v1
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          required_labels: |
-            deploy-gw-interno
-            deploy-gw-externo
-            deploy-domain
-            deploy-sandbox
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          # Obtém as labels do PR usando o GitHub CLI
+          LABELS=$(gh pr view $PR_NUMBER --json labels --jq '.labels[].name')
+
+          # Define as labels obrigatórias
+          REQUIRED_LABELS=("deploy-gw-interno" "deploy-gw-externo" "deploy-domain" "deploy-sandbox")
+          
+          # Verifica se uma das labels obrigatórias está presente
+          LABEL_PRESENT=false
+          for REQUIRED_LABEL in "${REQUIRED_LABELS[@]}"; do
+            if echo "$LABELS" | grep -q "$REQUIRED_LABEL"; then
+              LABEL_PRESENT=true
+              break
+            fi
+          done
+
+          # Falha se nenhuma label obrigatória estiver presente
+          if [ "$LABEL_PRESENT" = false ]; then
+            echo "Erro: Este PR requer uma das seguintes labels: ${REQUIRED_LABELS[*]}"
+            exit 1
+          else
+            echo "Label obrigatória encontrada. PR pronto para revisão."
+          fi
+
