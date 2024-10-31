@@ -1,0 +1,22 @@
+name: Label Check
+
+on:
+  pull_request:
+    types: [opened, edited, labeled, unlabeled]  # Aciona o workflow quando o PR é criado ou atualizado
+
+jobs:
+  check_label:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verificar se há uma label obrigatória no PR
+        uses: actions-ecosystem/action-required-labels@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          required_labels: |
+            deploy-gw-interno
+            deploy-gw-externo
+            deploy-domain
+            deploy-sandbox
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
