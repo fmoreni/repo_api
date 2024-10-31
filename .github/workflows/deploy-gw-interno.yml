@@ -1,16 +1,14 @@
 name: Deploy to Development for GW Interno
 
 on:
-  pull_request:
+  push:
     branches:
-      - develop
+      - develop   # Aciona o workflow apenas quando há um push na branch 'develop'
     paths:
-      - 'configs/gw-interno/**'
-    types: [opened, labeled]
+      - 'configs/gw-interno/**'  # Monitora apenas alterações na pasta do GW Interno
 
 jobs:
   deploy:
-    if: contains(github.event.pull_request.labels.*.name, 'deploy-gw-interno')
     runs-on: ubuntu-latest
 
     steps:
