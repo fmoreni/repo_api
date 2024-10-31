@@ -6,7 +6,7 @@ on:
       - develop
     paths:
       - 'configs/gw-interno/**'
-    types: [opened, labeled]  # Aciona o workflow ao abrir o PR e ao aplicar a label
+    types: [opened, labeled]
 
 jobs:
   deploy:
