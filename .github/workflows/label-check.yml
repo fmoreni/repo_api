@@ -17,29 +17,30 @@ jobs:
       - name: Autenticar com o GitHub CLI
         run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
-      - name: Verificar se há uma label obrigatória no PR
+      - name: Verificar se há uma palavra-chave obrigatória no corpo do PR
         env:
           PR_NUMBER: ${{ github.event.number }}
         run: |
-          # Obtém as labels do PR usando o GitHub CLI
-          LABELS=$(gh pr view $PR_NUMBER --json labels --jq '.labels[].name')
+          # Obtém o corpo do PR usando o GitHub CLI
+          PR_BODY=$(gh pr view $PR_NUMBER --json body --jq '.body')
 
-          # Define as labels obrigatórias
-          REQUIRED_LABELS=("deploy-gw-interno" "deploy-gw-externo" "deploy-domain" "deploy-sandbox")
+          # Define as palavras-chave obrigatórias
+          REQUIRED_KEYWORDS=("deploy-gw-interno" "deploy-gw-externo" "deploy-domain" "deploy-sandbox")
           
-          # Verifica se uma das labels obrigatórias está presente
-          LABEL_PRESENT=false
-          for REQUIRED_LABEL in "${REQUIRED_LABELS[@]}"; do
-            if echo "$LABELS" | grep -q "$REQUIRED_LABEL"; then
-              LABEL_PRESENT=true
+          # Verifica se uma das palavras-chave obrigatórias está presente no corpo do PR
+          KEYWORD_PRESENT=false
+          for REQUIRED_KEYWORD in "${REQUIRED_KEYWORDS[@]}"; do
+            if echo "$PR_BODY" | grep -iq "$REQUIRED_KEYWORD"; then
+              KEYWORD_PRESENT=true
+              echo "Palavra-chave '$REQUIRED_KEYWORD' encontrada no corpo do PR."
               break
             fi
           done
 
-          # Falha se nenhuma label obrigatória estiver presente
-          if [ "$LABEL_PRESENT" = false ]; then
-            echo "Erro: Este PR requer uma das seguintes labels: ${REQUIRED_LABELS[*]}"
+          # Falha se nenhuma palavra-chave obrigatória estiver presente
+          if [ "$KEYWORD_PRESENT" = false ]; then
+            echo "Erro: O corpo do PR requer uma das seguintes palavras-chave: ${REQUIRED_KEYWORDS[*]}"
             exit 1
           else
-            echo "Label obrigatória encontrada. PR pronto para revisão."
+            echo "Palavra-chave obrigatória encontrada. PR pronto para revisão."
           fi
